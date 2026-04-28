@@ -1,0 +1,1183 @@
+/* ── FIBB Communication Suite — Admin Styles ── */
+
+:root {
+    --fibb-red:    #c8102e;
+    --fibb-dark:   #1a1a2e;
+    --fibb-light:  #f7f7f7;
+    --fb-color:    #1877f2;
+    --ig-color:    #e1306c;
+    --li-color:    #0a66c2;
+    --email-color: #c8102e;
+}
+
+/* Tabs */
+.fibb-tabs { display: flex; gap: 0; border-bottom: 2px solid var(--fibb-red); margin-bottom: 24px; }
+.fibb-tabs a {
+    display: inline-block;
+    padding: 10px 20px;
+    text-decoration: none;
+    color: #555;
+    font-weight: 500;
+    border: 1px solid transparent;
+    border-bottom: none;
+    background: #f1f1f1;
+    margin-right: 2px;
+    border-radius: 4px 4px 0 0;
+    transition: background 0.15s;
+}
+.fibb-tabs a:hover { background: #e0e0e0; color: #222; }
+.fibb-tabs a.active { background: #fff; color: var(--fibb-red); border-color: #ccc; border-bottom-color: #fff; font-weight: 700; }
+
+/* Header */
+.fibb-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 0 8px;
+    border-bottom: 3px solid var(--fibb-red);
+    margin-bottom: 24px;
+}
+.fibb-header img { height: 50px; width: auto; }
+.fibb-header h1 { margin: 0; color: var(--fibb-dark); font-size: 1.5rem; }
+
+/* Platform badges */
+.fibb-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.fibb-badge-facebook  { background: var(--fb-color); }
+.fibb-badge-instagram { background: var(--ig-color); }
+.fibb-badge-linkedin  { background: var(--li-color); }
+.fibb-badge-email     { background: var(--email-color); }
+.fibb-badge-draft     { background: #888; }
+
+/* Status badges */
+.fibb-status {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+}
+.fibb-status-scheduled { background: #f39c12; }
+.fibb-status-published { background: #27ae60; }
+.fibb-status-failed    { background: #e74c3c; }
+.fibb-status-draft     { background: #95a5a6; }
+
+/* Calendar */
+.fibb-calendar-wrap { overflow-x: auto; }
+.fibb-calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #ddd; border: 1px solid #ddd; }
+.fibb-calendar-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--fibb-dark); margin-bottom: 1px; }
+.fibb-calendar-header span { background: var(--fibb-dark); color: #fff; text-align: center; padding: 8px 4px; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+
+.fibb-day {
+    background: #fff;
+    min-height: 90px;
+    padding: 4px;
+    vertical-align: top;
+    position: relative;
+}
+.fibb-day.other-month { background: #fafafa; }
+.fibb-day.today { background: #fff8f0; }
+.fibb-day-num { font-size: 12px; color: #888; font-weight: 700; margin-bottom: 4px; display: block; }
+.fibb-day.today .fibb-day-num { color: var(--fibb-red); }
+
+.fibb-event {
+    display: block;
+    margin: 2px 0;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 10px;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    text-decoration: none;
+}
+.fibb-event:hover { opacity: 0.85; }
+.fibb-event-facebook  { background: var(--fb-color); }
+.fibb-event-instagram { background: var(--ig-color); }
+.fibb-event-linkedin  { background: var(--li-color); }
+.fibb-event-email     { background: var(--email-color); }
+.fibb-event-draft     { background: #bbb; color: #555; border: 1px dashed #999; }
+
+/* Calendar nav */
+.fibb-cal-nav { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.fibb-cal-nav h2 { margin: 0; font-size: 1.2rem; }
+.fibb-cal-nav a { text-decoration: none; }
+
+/* Forms */
+.fibb-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.fibb-form-grid .full { grid-column: 1 / -1; }
+
+.fibb-platform-checks { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.fibb-platform-checks label { display: flex; align-items: center; gap: 6px; font-weight: 600; cursor: pointer; }
+
+.fibb-char-counter { font-size: 12px; color: #666; float: right; }
+.fibb-char-counter.warn { color: #e74c3c; font-weight: 700; }
+
+/* Connection test */
+.fibb-test-result { display: inline-block; margin-left: 12px; font-size: 13px; }
+.fibb-test-ok  { color: #27ae60; }
+.fibb-test-err { color: #e74c3c; }
+
+/* Token expiry alert */
+.fibb-token-alert { display: inline-block; padding: 4px 10px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; font-size: 12px; color: #856404; margin-left: 8px; }
+.fibb-token-alert.critical { background: #f8d7da; border-color: #f5c2c7; color: #842029; }
+
+/* Settings sections */
+.fibb-settings-section { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 20px; margin-bottom: 20px; }
+.fibb-settings-section h3 { margin-top: 0; padding-bottom: 8px; border-bottom: 2px solid var(--fibb-red); color: var(--fibb-dark); }
+
+/* Action buttons */
+.fibb-btn { display: inline-block; padding: 8px 18px; border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; border: none; transition: opacity 0.15s; }
+.fibb-btn:hover { opacity: 0.85; }
+.fibb-btn-primary { background: var(--fibb-red); color: #fff; }
+.fibb-btn-secondary { background: #555; color: #fff; }
+.fibb-btn-outline { background: transparent; color: var(--fibb-red); border: 2px solid var(--fibb-red); }
+
+/* Import plan button */
+.fibb-import-btn-wrap { background: #fff8e1; border: 1px solid #ffd54f; border-radius: 6px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.fibb-import-btn-wrap p { margin: 0; font-size: 13px; color: #555; }
+
+/* Error log table */
+.fibb-log-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.fibb-log-table th { text-align: left; padding: 8px; background: var(--fibb-dark); color: #fff; }
+.fibb-log-table td { padding: 8px; border-bottom: 1px solid #eee; vertical-align: top; }
+.fibb-log-table tr:hover td { background: #fafafa; }
+
+/* ── Plan tab ───────────────────────────────────────────────── */
+.fibb-plan-header {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+.fibb-plan-stats {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.fibb-plan-stat-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px 16px;
+    min-width: 130px;
+    text-align: center;
+}
+.fibb-plan-stat-total {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--fibb-dark);
+    line-height: 1.2;
+    margin: 4px 0;
+}
+.fibb-plan-stat-breakdown {
+    font-size: 11px;
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* View toggle */
+.fibb-plan-view-toggle {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+.fibb-toggle-btn {
+    display: inline-block;
+    padding: 6px 14px;
+    border: 2px solid #ddd;
+    border-radius: 20px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: #555;
+    background: #fff;
+    transition: all 0.15s;
+}
+.fibb-toggle-btn:hover { border-color: var(--fibb-red); color: var(--fibb-red); }
+.fibb-toggle-btn.active { background: var(--fibb-red); border-color: var(--fibb-red); color: #fff; }
+.fibb-kanban-hint { font-size: 11px; color: #aaa; margin-left: 8px; }
+
+/* ── Kanban board ────────────────────────────────────────────── */
+.fibb-kanban {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 16px;
+    align-items: flex-start;
+    width: 100%;
+    box-sizing: border-box;
+}
+.fibb-kanban-col {
+    flex: 0 0 240px !important;
+    min-width: 200px;
+    background: #f4f5f7;
+    border-radius: 8px;
+    display: flex !important;
+    flex-direction: column !important;
+    max-height: 70vh;
+    border-top: 3px solid var(--col-color, #ccc);
+    transition: box-shadow 0.15s;
+}
+.fibb-kanban-col.drag-over {
+    box-shadow: 0 0 0 2px var(--col-color, var(--fibb-red));
+    background: #fef9f0;
+}
+.fibb-kanban-col-header {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px 8px;
+    border-bottom: 1px solid #e0e0e0;
+}
+.fibb-kanban-col-title { font-weight: 700; font-size: 13px; color: var(--fibb-dark); }
+.fibb-kanban-col-count {
+    background: var(--col-color, #ccc);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 10px;
+    padding: 1px 7px;
+    min-width: 20px;
+    text-align: center;
+}
+.fibb-kanban-col-body {
+    flex: 1 !important;
+    overflow-y: auto;
+    padding: 8px;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px;
+    min-height: 80px;
+}
+.fibb-kanban-add-card {
+    display: block;
+    text-align: center;
+    padding: 8px;
+    font-size: 12px;
+    color: #888;
+    text-decoration: none;
+    border-top: 1px solid #e0e0e0;
+    border-radius: 0 0 8px 8px;
+    transition: background 0.12s;
+}
+.fibb-kanban-add-card:hover { background: #eee; color: var(--fibb-red); }
+.fibb-kanban-readonly { opacity: 0.85; }
+
+/* Cards */
+.fibb-kanban-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 8px 10px;
+    cursor: grab;
+    transition: box-shadow 0.12s, transform 0.12s;
+    user-select: none;
+}
+.fibb-kanban-card[draggable="false"] { cursor: default; }
+.fibb-kanban-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+.fibb-kanban-card.is-dragging {
+    opacity: 0.4;
+    transform: rotate(1.5deg);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+.fibb-kanban-card-header {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+.fibb-kanban-phase-tag {
+    font-size: 10px;
+    color: #999;
+    background: #f0f0f0;
+    padding: 1px 6px;
+    border-radius: 8px;
+}
+.fibb-kanban-card-time { font-size: 10px; color: #aaa; margin-bottom: 5px; }
+.fibb-kanban-card-content { font-size: 12px; color: #444; line-height: 1.5; }
+.fibb-kanban-card-img-badge {
+    font-size: 10px;
+    color: #e1306c;
+    margin-top: 4px;
+}
+.fibb-kanban-card-footer {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid #f0f0f0;
+}
+.fibb-kanban-edit-link { font-size: 11px; color: #0073aa; text-decoration: none; }
+.fibb-kanban-edit-link:hover { text-decoration: underline; }
+.fibb-kanban-error-hint { font-size: 10px; color: #e74c3c; cursor: help; }
+.fibb-kanban-delete-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    padding: 2px 4px;
+    border-radius: 3px;
+    opacity: 0.4;
+    transition: opacity 0.15s, background 0.15s;
+    line-height: 1;
+}
+.fibb-kanban-delete-btn:hover { opacity: 1; background: #fde8e8; }
+.fibb-kanban-delete-btn.fibb-kanban-delete-published:hover { background: #fff3e0; }
+.fibb-kanban-delete-btn:disabled { cursor: wait; }
+.fibb-kanban-drop-zone {
+    border: 2px dashed #ccc;
+    border-radius: 6px;
+    padding: 12px;
+    text-align: center;
+    font-size: 11px;
+    color: #bbb;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s, background 0.15s;
+}
+.drag-over .fibb-kanban-drop-zone {
+    border-color: var(--col-color, var(--fibb-red));
+    background: rgba(200,16,46,0.04);
+    color: var(--fibb-red);
+}
+
+/* Toast */
+.fibb-kanban-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    z-index: 99999;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    animation: fibbToastIn 0.2s ease;
+}
+.fibb-toast-ok  { background: #27ae60; }
+.fibb-toast-err { background: #e74c3c; }
+@keyframes fibbToastIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Templates section */
+.fibb-plan-tpl-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    padding: 12px 16px;
+    background: var(--fibb-dark);
+    color: #fff;
+    border-radius: 6px;
+    margin-bottom: 2px;
+}
+.fibb-plan-tpl-toggle h3 { margin: 0; color: #fff; font-size: 14px; border: none; padding: 0; }
+.fibb-tpl-arrow { font-size: 12px; transition: transform 0.2s; }
+.fibb-plan-tpl-grid { display: none; }
+.fibb-plan-tpl-grid.open { display: block; }
+.fibb-plan-tpl-section { margin-bottom: 24px; margin-top: 16px; }
+.fibb-plan-tpl-section h4 { font-size: 13px; color: #555; margin-bottom: 10px; padding-left: 4px; }
+.fibb-plan-tpl-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+}
+.fibb-plan-tpl-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px 12px;
+}
+.fibb-plan-tpl-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+}
+.fibb-plan-tpl-slug { font-size: 10px; color: #888; }
+.fibb-plan-tpl-preview { font-size: 11px; color: #555; line-height: 1.5; margin: 0 0 8px; }
+
+/* ── Stats bar ──────────────────────────────────────────────── */
+.fibb-stats-bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    align-items: center;
+}
+.fibb-stat {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+}
+.fibb-stat-total     { background: var(--fibb-dark); }
+.fibb-stat-scheduled { background: #f39c12; }
+.fibb-stat-published { background: #27ae60; }
+.fibb-stat-failed    { background: #e74c3c; }
+.fibb-stat-draft     { background: #95a5a6; }
+
+/* ── Filtres ─────────────────────────────────────────────────── */
+.fibb-filters {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    font-size: 12px;
+}
+.fibb-filter-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+}
+.fibb-filter-label input { margin: 0; }
+
+/* ── Vue ANNÉE ───────────────────────────────────────────────── */
+.fibb-year-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-top: 8px;
+}
+.fibb-mini-month {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px;
+}
+.fibb-mini-month-title {
+    display: block;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--fibb-dark);
+    text-decoration: none;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 2px solid var(--fibb-red);
+}
+.fibb-mini-month-title:hover { color: var(--fibb-red); }
+.fibb-mini-cal {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+}
+.fibb-mini-dow {
+    font-size: 9px;
+    font-weight: 700;
+    text-align: center;
+    color: #aaa;
+    padding-bottom: 3px;
+}
+.fibb-mini-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 22px;
+    border-radius: 3px;
+    text-decoration: none;
+    padding: 1px;
+    transition: background 0.1s;
+}
+.fibb-mini-day:hover { background: #f5f5f5; }
+.fibb-mini-day.is-today .fibb-mini-day-num { color: var(--fibb-red); font-weight: 700; }
+.fibb-mini-day.has-events { background: #fef9f0; }
+.fibb-mini-day-num { font-size: 10px; color: #555; line-height: 1.4; }
+.fibb-mini-dots { display: flex; gap: 1px; flex-wrap: wrap; justify-content: center; }
+.fibb-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.dot-facebook  { background: var(--fb-color); }
+.dot-instagram { background: var(--ig-color); }
+.dot-linkedin  { background: var(--li-color); }
+.dot-email     { background: var(--email-color); }
+
+/* ── Vue SEMAINE ─────────────────────────────────────────────── */
+.fibb-week-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-top: 8px;
+    min-height: 400px;
+}
+.fibb-week-day {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+.fibb-week-day.today { border-color: var(--fibb-red); }
+.fibb-week-day-header {
+    background: var(--fibb-dark);
+    color: #fff;
+    padding: 6px 8px;
+    text-align: center;
+}
+.fibb-week-day-header.today { background: var(--fibb-red); }
+.fibb-week-day-name { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; opacity: 0.8; }
+.fibb-week-day-num  { display: block; font-size: 18px; font-weight: 700; line-height: 1.2; }
+.fibb-week-day-events {
+    padding: 6px 4px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.fibb-week-event {
+    white-space: normal !important;
+    line-height: 1.4;
+    font-size: 11px;
+    padding: 4px 6px;
+}
+.fibb-week-event-time {
+    display: block;
+    font-size: 10px;
+    opacity: 0.8;
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+/* ── Popup ───────────────────────────────────────────────────── */
+#fibb-popup-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 99998;
+}
+#fibb-popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+    width: 92%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    z-index: 99999;
+    padding: 20px;
+}
+.fibb-popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+.fibb-popup-close-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #999;
+    cursor: pointer;
+    padding: 0 0 0 12px;
+    line-height: 1;
+}
+.fibb-popup-close-btn:hover { color: #333; }
+.fibb-popup-date {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 10px;
+}
+.fibb-popup-content {
+    white-space: pre-wrap;
+    font-size: 13px;
+    line-height: 1.7;
+    border-top: 1px solid #eee;
+    padding-top: 12px;
+    margin-top: 4px;
+    color: #333;
+    max-height: 200px;
+    overflow-y: auto;
+}
+.fibb-popup-image {
+    max-width: 100%;
+    margin-top: 12px;
+    border-radius: 4px;
+    border: 1px solid #eee;
+    display: none;
+}
+.fibb-popup-actions {
+    margin-top: 16px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding-top: 12px;
+    border-top: 1px solid #eee;
+}
+
+@media (max-width: 1200px) {
+    .fibb-year-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 900px) {
+    .fibb-year-grid { grid-template-columns: repeat(2, 1fr); }
+    .fibb-week-grid { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 782px) {
+    .fibb-form-grid { grid-template-columns: 1fr; }
+    .fibb-calendar { grid-template-columns: repeat(7, minmax(80px, 1fr)); }
+    .fibb-year-grid { grid-template-columns: repeat(2, 1fr); }
+    .fibb-week-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ── Newsletter tab ─────────────────────────────────────────────── */
+
+.fibb-nl-status-bar {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 16px !important;
+    margin-bottom: 28px;
+}
+.fibb-nl-stat-card {
+    flex: 1 1 160px !important;
+    min-width: 160px;
+    background: #fff !important;
+    border-radius: 8px;
+    border-top: 3px solid var(--fibb-red) !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    padding: 16px 18px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+    box-sizing: border-box;
+}
+.fibb-nl-stat-icon {
+    font-size: 22px !important;
+    line-height: 1;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+.fibb-nl-stat-body {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    min-width: 0;
+}
+.fibb-nl-stat-label {
+    font-size: 11px !important;
+    text-transform: uppercase;
+    color: #888;
+    font-weight: 600;
+    letter-spacing: .5px;
+    display: block !important;
+}
+.fibb-nl-stat-value {
+    font-size: 20px !important;
+    font-weight: 800 !important;
+    color: var(--fibb-dark) !important;
+    line-height: 1.1;
+    display: block !important;
+}
+.fibb-nl-stat-sub {
+    font-size: 11px !important;
+    color: #999;
+    display: block !important;
+}
+
+.fibb-nl-layout {
+    display: grid !important;
+    grid-template-columns: 1fr 320px !important;
+    gap: 24px !important;
+    align-items: start;
+}
+
+.fibb-nl-config {
+    background: #fff !important;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    padding: 24px !important;
+    box-sizing: border-box;
+}
+
+.fibb-nl-section-title {
+    margin: 0 0 18px 0 !important;
+    font-size: 13px;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    color: var(--fibb-red) !important;
+    letter-spacing: .5px;
+}
+
+.fibb-nl-field {
+    margin-bottom: 16px;
+}
+.fibb-nl-field label {
+    display: block !important;
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.fibb-nl-sidebar {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+}
+
+.fibb-nl-action-card {
+    background: #fff !important;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    padding: 20px !important;
+}
+.fibb-nl-action-danger {
+    border: 1px solid #ffdede !important;
+    background: #fff8f8 !important;
+}
+
+.fibb-nl-history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+.fibb-nl-history-table th {
+    text-align: left;
+    padding: 6px 8px;
+    background: #f7f7f7;
+    border-bottom: 2px solid #eee;
+    font-weight: 600;
+    color: #555;
+}
+.fibb-nl-history-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #f0f0f0;
+    color: #444;
+}
+.fibb-nl-history-table tr:last-child td { border-bottom: none; }
+.fibb-nl-history-table code { font-size: 11px; background: #f3f3f3; padding: 1px 5px; border-radius: 3px; }
+
+@media (max-width: 900px) {
+    .fibb-nl-layout { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   WIZARD — Plan de Communication
+═══════════════════════════════════════════════════════════ */
+
+.fibb-wizard-wrap { max-width: 1200px; }
+
+/* Barre de progression */
+.fibb-wizard-steps {
+    display: flex;
+    gap: 0;
+    margin-bottom: 28px;
+    border-radius: 6px;
+    overflow: hidden;
+}
+.fibb-wizard-step {
+    flex: 1;
+    text-align: center;
+    padding: 12px 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #aaa;
+    border-bottom: 3px solid #ddd;
+    background: #fafafa;
+    transition: all 0.2s;
+    cursor: default;
+}
+.fibb-wizard-step.active {
+    color: var(--fibb-red);
+    border-color: var(--fibb-red);
+    background: #fff;
+}
+.fibb-wizard-step.done {
+    color: #27ae60;
+    border-color: #27ae60;
+    background: #f0fff4;
+}
+
+/* Panneaux */
+.fibb-wizard-panel { animation: fibbFadeIn 0.25s ease; }
+@keyframes fibbFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: none; }
+}
+
+/* Pied de page de chaque étape */
+.fibb-wizard-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 28px;
+    padding-top: 16px;
+    border-top: 1px solid #eee;
+}
+
+/* Erreurs inline */
+.fibb-wiz-error {
+    color: #c0392b;
+    background: #fdf3f2;
+    border: 1px solid #f5c6c2;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-top: 10px;
+    font-size: 13px;
+}
+
+/* Bannière reprise session */
+.fibb-wizard-resume {
+    background: #fff8e1;
+    border: 1px solid #ffd54f;
+    border-radius: 6px;
+    padding: 10px 16px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+}
+
+/* Labels canaux */
+.fibb-wiz-chan-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+.fibb-wiz-cred {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 10px;
+}
+.fibb-wiz-cred-ok   { color: #27ae60; background: #e8f5e9; }
+.fibb-wiz-cred-warn { color: #e67e22; background: #fef9e7; }
+
+/* ── Étape 2 : grille des templates ── */
+.fibb-wiz-phase-section {
+    margin-bottom: 24px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    overflow: hidden;
+}
+.fibb-wiz-phase-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    background: var(--fibb-dark);
+    color: #fff;
+}
+.fibb-wiz-phase-header h3 { margin: 0; font-size: 14px; color: #fff; }
+
+.fibb-wiz-tpl-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    padding: 16px;
+}
+
+.fibb-wiz-tpl-card {
+    background: #fafafa;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.fibb-wiz-tpl-card:hover {
+    border-color: #aaa;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.fibb-wiz-tpl-card.is-selected {
+    border-color: var(--fibb-red);
+    box-shadow: 0 0 0 3px rgba(200,16,46,0.12);
+    background: #fff;
+}
+
+.fibb-wiz-tpl-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.fibb-wiz-tpl-preview {
+    font-size: 12px;
+    color: #555;
+    line-height: 1.5;
+    flex: 1;
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+.fibb-wiz-tpl-card-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 4px;
+}
+
+.fibb-wiz-seo-badge { min-width: 32px; text-align: right; }
+
+.fibb-wiz-newsletter-note {
+    background: #e8f4fd;
+    border: 1px solid #bee3f8;
+    border-radius: 4px;
+    padding: 10px 14px;
+    font-size: 13px;
+    margin: 12px 0;
+}
+
+/* ── Étape 3 : table des dates ── */
+.fibb-wiz-date-table { font-size: 13px; }
+.fibb-wiz-date-table th { background: var(--fibb-dark); color: #fff; padding: 8px 10px; }
+.fibb-wiz-date-table td { padding: 7px 10px; vertical-align: middle; }
+
+.fibb-wiz-date-auto-tag {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 10px;
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+.fibb-wiz-date-edit-tag {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 10px;
+    background: #fff3e0;
+    color: #e65100;
+}
+
+/* Timeline */
+.fibb-wiz-timeline-wrap { margin: 20px 0 28px; }
+.fibb-wiz-timeline {
+    position: relative;
+    height: 40px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    margin: 0 4px;
+}
+.fibb-wiz-tl-dot {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    transition: left 0.2s;
+}
+.fibb-wiz-tl-label {
+    position: absolute;
+    top: 100%;
+    font-size: 10px;
+    color: #888;
+    margin-top: 4px;
+    transform: translateX(-50%);
+}
+.fibb-wiz-tl-start { left: 0; transform: none; }
+.fibb-wiz-tl-mid   { left: 86%; transform: translateX(-50%); } /* 90/(90+14)=86% */
+.fibb-wiz-tl-end   { right: 0; left: auto; transform: none; }
+
+/* ── Étape 4 : Révision ── */
+.fibb-wiz-summary-stats {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+.fibb-wiz-stat-box {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 10px 16px;
+    text-align: center;
+    min-width: 90px;
+}
+.fibb-wiz-stat-num {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--fibb-dark);
+    line-height: 1;
+}
+.fibb-wiz-stat-label {
+    font-size: 11px;
+    color: #777;
+    margin-top: 4px;
+}
+.fibb-wiz-warnings { margin-bottom: 16px; }
+.fibb-wiz-warn-item {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    font-size: 13px;
+}
+
+/* ── Étape 5 : Activation ── */
+.fibb-wiz-progress-bar {
+    height: 12px;
+    background: #eee;
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 24px 0;
+}
+.fibb-wiz-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--fibb-red), #e74c3c);
+    border-radius: 6px;
+    width: 0%;
+    transition: width 0.4s ease;
+}
+.fibb-wiz-success-banner {
+    background: #e8f5e9;
+    border: 1px solid #a5d6a7;
+    border-radius: 6px;
+    padding: 20px 24px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.fibb-wiz-checkmark { font-size: 28px; }
+.fibb-wiz-error-banner {
+    background: #fdf3f2;
+    border: 1px solid #f5c6c2;
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #c0392b;
+    margin-bottom: 8px;
+}
+.fibb-wiz-spinner { color: #888; font-style: italic; }
+
+/* ── Modal aperçu ── */
+#fibb-wizard-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 100000;
+}
+.fibb-wizard-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+    z-index: 100001;
+    width: 540px;
+    max-width: 96vw;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 0;
+    animation: fibbFadeIn 0.2s ease;
+}
+.fibb-wizard-modal-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    background: var(--fibb-dark);
+    color: #fff;
+    border-radius: 8px 8px 0 0;
+    position: sticky;
+    top: 0;
+}
+.fibb-wizard-modal-head h3 { margin: 0; color: #fff; font-size: 14px; }
+.fibb-wiz-modal-close {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+}
+.fibb-wiz-modal-close:hover { color: var(--fibb-red); }
+#fibb-wiz-modal-body { padding: 20px; }
+
+/* Phase badges */
+.fibb-phase-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+.fibb-phase-launch    { background: #e3f2fd; color: #1565c0; }
+.fibb-phase-pre_event { background: #fff3e0; color: #e65100; }
+.fibb-phase-during    { background: #e8f5e9; color: #2e7d32; }
+.fibb-phase-post_event { background: #f3e5f5; color: #6a1b9a; }
+
+/* SEO détail dans modal */
+.fibb-wiz-seo-detail {
+    background: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 10px 14px;
+    margin-top: 12px;
+    font-size: 13px;
+}
+.fibb-wiz-seo-detail ul { margin: 6px 0 0 0; padding-left: 16px; }
+
+/* Wizard responsive */
+@media (max-width: 900px) {
+    .fibb-wiz-tpl-grid { grid-template-columns: 1fr 1fr; }
+    .fibb-wizard-footer { flex-direction: column; gap: 10px; align-items: stretch; }
+    .fibb-wizard-footer button, .fibb-wizard-footer a { width: 100%; text-align: center; }
+}
+@media (max-width: 600px) {
+    .fibb-wiz-tpl-grid { grid-template-columns: 1fr; }
+    .fibb-wizard-modal { width: 98vw; }
+}
+

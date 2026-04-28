@@ -1,0 +1,14 @@
+# WordPress
+*.log
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Build / cache
+node_modules/
+vendor/
+*.zip
