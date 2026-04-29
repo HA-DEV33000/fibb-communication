@@ -8,7 +8,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'FIBB_COMM_VERSION',    '2.1' );
+define( 'FIBB_COMM_VERSION',    '2.2' );
 define( 'FIBB_COMM_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'FIBB_COMM_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'FIBB_COMM_OPTION',     'fibb_comm_settings' );
@@ -26,6 +26,7 @@ require_once FIBB_COMM_PLUGIN_DIR . 'includes/class-fibb-comm-templates.php';
 require_once FIBB_COMM_PLUGIN_DIR . 'includes/class-fibb-comm-seo.php';
 require_once FIBB_COMM_PLUGIN_DIR . 'includes/class-fibb-comm-wizard.php';
 require_once FIBB_COMM_PLUGIN_DIR . 'includes/class-fibb-comm-auto-instagram.php';
+require_once FIBB_COMM_PLUGIN_DIR . 'includes/class-fibb-comm-image-processor.php';
 require_once FIBB_COMM_PLUGIN_DIR . 'admin/class-fibb-comm-admin.php';
 
 /* ═══════════════════════════════════════
@@ -100,7 +101,14 @@ if ( is_admin() ) {
     add_action( 'wp_ajax_fibb_ig_bulk_schedule',        [ $fibb_admin, 'ajax_ig_bulk_schedule' ] );
     add_action( 'wp_ajax_fibb_ig_publish_now',          [ $fibb_admin, 'ajax_ig_publish_now' ] );
     add_action( 'wp_ajax_fibb_ig_get_post',             [ $fibb_admin, 'ajax_ig_get_post' ] );
+    add_action( 'wp_ajax_fibb_ig_upload_image',         [ $fibb_admin, 'ajax_ig_upload_image' ] );
+    add_action( 'wp_ajax_fibb_ig_process_image',        [ $fibb_admin, 'ajax_ig_process_image' ] );
+
+    add_action( 'wp_ajax_fibb_comm_refresh_meta_token', [ $fibb_admin, 'ajax_refresh_meta_token' ] );
+    add_action( 'wp_ajax_fibb_comm_retry_all_failed',   [ $fibb_admin, 'ajax_retry_all_failed' ] );
 
     add_action( 'admin_post_fibb_comm_newsletter_save', [ $fibb_admin, 'handle_newsletter_save' ] );
     add_action( 'admin_post_fibb_comm_newsletter_send', [ $fibb_admin, 'handle_newsletter_send' ] );
+
+    add_action( 'admin_notices', [ $fibb_admin, 'admin_notices_token_alert' ] );
 }

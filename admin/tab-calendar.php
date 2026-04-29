@@ -35,6 +35,20 @@ if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $week_url_param ) ) {
     $week_url_param = $week_monday_default;
 }
 ?>
+<?php
+$failed_posts = FIBB_Comm_DB::get_posts_by_status( 'failed' );
+$failed_count = count( $failed_posts );
+if ( $failed_count > 0 ) :
+?>
+<div class="notice notice-error" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:10px 16px;">
+    <p style="margin:0;">🔴 <strong><?php echo esc_html( $failed_count ); ?> post(s) échoué(s)</strong> en attente de republication.</p>
+    <button type="button" id="fibb-retry-all-btn" class="button button-primary" style="background:#e74c3c;border-color:#c0392b;">
+        🔄 Republier tous les échecs (<?php echo esc_html( $failed_count ); ?>)
+    </button>
+</div>
+<div id="fibb-retry-all-result" style="display:none;padding:10px 16px;margin-bottom:12px;border-radius:4px;font-size:13px;"></div>
+<?php endif; ?>
+
 <!-- Sélecteur de vue -->
 <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
     <a href="<?php echo esc_url( $base_url . '&view=year&month=' . $month_param ); ?>"

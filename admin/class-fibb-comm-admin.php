@@ -263,7 +263,17 @@ class FIBB_Comm_Admin {
 
         // Ne pas écraser le token si le champ est vide.
         $new_token = sanitize_text_field( wp_unslash( $_POST['meta_page_token'] ?? '' ) );
-        if ( $new_token ) $settings['meta_page_token'] = $new_token;
+        if ( $new_token ) {
+            $settings['meta_page_token']  = $new_token;
+            $settings['meta_token_type']  = 'manual';
+            $settings['meta_token_expiry'] = 0;
+            delete_option( 'fibb_comm_meta_token_expired' );
+        }
+
+        // App ID + App Secret (requis pour la génération de token permanent).
+        $settings['meta_app_id'] = sanitize_text_field( wp_unslash( $_POST['meta_app_id'] ?? '' ) );
+        $new_secret = sanitize_text_field( wp_unslash( $_POST['meta_app_secret'] ?? '' ) );
+        if ( $new_secret ) $settings['meta_app_secret'] = $new_secret;
 
         $settings['linkedin_org_id'] = sanitize_text_field( wp_unslash( $_POST['linkedin_org_id'] ?? '' ) );
         $new_li_token = sanitize_text_field( wp_unslash( $_POST['linkedin_token'] ?? '' ) );
@@ -277,6 +287,103 @@ class FIBB_Comm_Admin {
         update_option( FIBB_COMM_OPTION, $settings );
         wp_safe_redirect( add_query_arg( [ 'tab' => 'platforms', 'platforms-saved' => '1' ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) );
         exit;
+    }
+
+    public function ajax_retry_all_failed(): void {
+        check_ajax_referer( 'fibb_comm_ajax', '_ajax_nonce' );
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'error' => 'Permission refusée.' ] );
+        }
+
+        $failed       = FIBB_Comm_DB::get_posts_by_status( 'failed' );
+        $meta_api     = new FIBB_Comm_Meta_API();
+        $linkedin_api = new FIBB_Comm_LinkedIn_API();
+        $ok           = 0;
+        $errors       = 0;
+
+        foreach ( $failed as $post ) {
+            switch ( $post['platform'] ) {
+                case 'facebook':  $result = $meta_api->publish_facebook( $post ); break;
+                case 'instagram': $result = $meta_api->publish_instagram( $post ); break;
+                case 'linkedin':  $result = $linkedin_api->publish( $post ); break;
+                default:          $result = [ 'success' => false, 'error' => 'Plateforme inconnue.' ];
+            }
+
+            if ( $result['success'] ) {
+                FIBB_Comm_DB::mark_published( (int) $post['id'], $result['post_id'] ?? '' );
+                $ok++;
+            } else {
+                FIBB_Comm_DB::mark_failed( (int) $post['id'], $result['error'] ?? 'Erreur' );
+                $errors++;
+            }
+        }
+
+        wp_send_json_success( [
+            'ok'      => $ok,
+            'errors'  => $errors,
+            'total'   => count( $failed ),
+            'message' => "{$ok} republié(s) avec succès" . ( $errors ? ", {$errors} échec(s)" : '' ) . '.',
+        ] );
+    }
+
+    public function ajax_refresh_meta_token(): void {
+        check_ajax_referer( 'fibb_comm_ajax', '_ajax_nonce' );
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'error' => 'Permission refusée.' ] );
+        }
+
+        $user_token = sanitize_text_field( wp_unslash( $_POST['user_token'] ?? '' ) );
+        if ( ! $user_token ) {
+            wp_send_json_error( [ 'error' => 'Token utilisateur manquant.' ] );
+            return;
+        }
+
+        $settings   = get_option( FIBB_COMM_OPTION, [] );
+        $app_id     = $settings['meta_app_id'] ?? '';
+        $app_secret = $settings['meta_app_secret'] ?? '';
+
+        if ( ! $app_id || ! $app_secret ) {
+            wp_send_json_error( [ 'error' => 'App ID ou App Secret non configuré. Remplissez ces champs et enregistrez d\'abord.' ] );
+            return;
+        }
+
+        $meta_api = new FIBB_Comm_Meta_API();
+        $result   = $meta_api->extend_token( $user_token, $app_id, $app_secret );
+
+        if ( ! $result['success'] ) {
+            wp_send_json_error( [ 'error' => $result['error'] ] );
+            return;
+        }
+
+        $settings['meta_page_token']   = $result['token'];
+        $settings['meta_token_type']   = $result['type'];
+        $settings['meta_token_expiry'] = $result['expiry_ts'];
+        update_option( FIBB_COMM_OPTION, $settings );
+        delete_option( 'fibb_comm_meta_token_expired' );
+
+        $type_label = $result['type'] === 'page'
+            ? 'Page Access Token (permanent ✓)'
+            : 'Long-lived User Token (~60 jours)';
+        $expiry_str = $result['expiry_ts']
+            ? 'Expire le ' . gmdate( 'd/m/Y', $result['expiry_ts'] )
+            : 'Permanent — ne expire pas';
+
+        wp_send_json_success( [
+            'message' => "Token mis à jour : {$type_label}. {$expiry_str}.",
+            'type'    => $result['type'],
+            'expiry'  => $expiry_str,
+        ] );
+    }
+
+    public function admin_notices_token_alert(): void {
+        if ( ! current_user_can( 'manage_options' ) ) return;
+        if ( ! get_option( 'fibb_comm_meta_token_expired' ) ) return;
+
+        $url = admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=platforms' );
+        printf(
+            '<div class="notice notice-error"><p>🔴 <strong>Token Facebook/Instagram expiré</strong> — Les publications Meta échouent. <a href="%s"><strong>Renouveler le token maintenant →</strong></a></p></div>',
+            esc_url( $url )
+        );
     }
 
     private function action_save_settings(): void {
@@ -636,6 +743,68 @@ class FIBB_Comm_Admin {
 
     /* ── INSTAGRAM QUEUE AJAX ─────────────────────────────────── */
 
+    public function ajax_ig_upload_image(): void {
+        check_ajax_referer( 'fibb_comm_ajax', '_ajax_nonce' );
+        if ( ! current_user_can( 'upload_files' ) ) {
+            wp_send_json_error( [ 'error' => 'Permission refusée.' ] );
+        }
+
+        if ( empty( $_FILES['file'] ) || $_FILES['file']['error'] !== UPLOAD_ERR_OK ) {
+            $code = $_FILES['file']['error'] ?? -1;
+            wp_send_json_error( [ 'error' => "Aucun fichier reçu (code $code)." ] );
+            return;
+        }
+
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        require_once ABSPATH . 'wp-admin/includes/media.php';
+        require_once ABSPATH . 'wp-admin/includes/image.php';
+
+        $upload = wp_handle_upload( $_FILES['file'], [ 'test_form' => false ] );
+
+        if ( isset( $upload['error'] ) ) {
+            wp_send_json_error( [ 'error' => $upload['error'] ] );
+            return;
+        }
+
+        $attach_id = wp_insert_attachment( [
+            'post_mime_type' => $upload['type'],
+            'post_title'     => sanitize_file_name( pathinfo( $upload['file'], PATHINFO_FILENAME ) ),
+            'post_content'   => '',
+            'post_status'    => 'inherit',
+        ], $upload['file'] );
+
+        if ( is_wp_error( $attach_id ) ) {
+            wp_send_json_error( [ 'error' => $attach_id->get_error_message() ] );
+            return;
+        }
+
+        wp_update_attachment_metadata( $attach_id, wp_generate_attachment_metadata( $attach_id, $upload['file'] ) );
+
+        wp_send_json_success( [ 'id' => $attach_id, 'url' => $upload['url'] ] );
+    }
+
+    public function ajax_ig_process_image(): void {
+        check_ajax_referer( 'fibb_comm_ajax', '_ajax_nonce' );
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'error' => 'Permission refusée.' ] );
+        }
+
+        $attachment_id = absint( $_POST['attachment_id'] ?? 0 );
+        if ( ! $attachment_id ) {
+            wp_send_json_error( [ 'error' => 'attachment_id manquant.' ] );
+            return;
+        }
+
+        $result = FIBB_Comm_Image_Processor::process_for_instagram( $attachment_id );
+
+        if ( isset( $result['error'] ) ) {
+            wp_send_json_error( [ 'error' => $result['error'] ] );
+            return;
+        }
+
+        wp_send_json_success( $result );
+    }
+
     public function ajax_ig_queue_add(): void {
         check_ajax_referer( 'fibb_comm_ajax', '_ajax_nonce' );
         if ( ! current_user_can( 'manage_options' ) ) {
@@ -646,6 +815,19 @@ class FIBB_Comm_Admin {
         if ( ! $image_url ) {
             wp_send_json_error( [ 'error' => 'URL image manquante.' ] );
             return;
+        }
+
+        // Auto-correction du format si l'image est dans la médiathèque WP
+        $attachment_id = FIBB_Comm_Image_Processor::get_attachment_id_from_url( $image_url );
+        if ( $attachment_id ) {
+            $meta_api    = new FIBB_Comm_Meta_API();
+            $ratio_check = $meta_api->check_instagram_ratio( $image_url );
+            if ( ! $ratio_check['valid'] ) {
+                $processed = FIBB_Comm_Image_Processor::process_for_instagram( $attachment_id );
+                if ( ! isset( $processed['error'] ) && $processed['url'] ) {
+                    $image_url = $processed['url'];
+                }
+            }
         }
 
         $caption    = sanitize_textarea_field( wp_unslash( $_POST['caption'] ?? '' ) );
@@ -756,8 +938,20 @@ class FIBB_Comm_Admin {
         foreach ( array_values( $images ) as $i => $image_url ) {
             $ratio_check = $meta_api->check_instagram_ratio( $image_url );
             if ( ! $ratio_check['valid'] ) {
-                $errors[] = 'Image #' . ( $i + 1 ) . ' : ' . $ratio_check['error'];
-                continue;
+                // Tentative de correction automatique via le processeur d'images
+                $att_id = FIBB_Comm_Image_Processor::get_attachment_id_from_url( $image_url );
+                if ( $att_id ) {
+                    $processed = FIBB_Comm_Image_Processor::process_for_instagram( $att_id );
+                    if ( ! isset( $processed['error'] ) && $processed['url'] ) {
+                        $image_url = $processed['url'];
+                    } else {
+                        $errors[] = 'Image #' . ( $i + 1 ) . ' : ' . ( $processed['error'] ?? $ratio_check['error'] );
+                        continue;
+                    }
+                } else {
+                    $errors[] = 'Image #' . ( $i + 1 ) . ' : ' . $ratio_check['error'];
+                    continue;
+                }
             }
 
             $scheduled_utc = gmdate( 'Y-m-d H:i:s', $start_utc_ts + $i * $interval_min * 60 );
@@ -875,7 +1069,7 @@ class FIBB_Comm_Admin {
             <div class="fibb-header">
                 <img src="https://festival-international-bridge-bordeaux.com/wp-content/uploads/2022/02/FIBB_logo-1000x300-1.png"
                      alt="FIBB Logo">
-                <h1>FIBB Communication Suite</h1>
+                <h1>FIBB Communication Suite <span class="fibb-version-badge">v1.0</span></h1>
             </div>
 
             <?php if ( $imported ) : ?>

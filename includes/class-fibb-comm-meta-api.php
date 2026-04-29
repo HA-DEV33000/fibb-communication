@@ -48,11 +48,76 @@ class FIBB_Comm_Meta_API {
 
         $data = json_decode( $body, true );
         if ( $code >= 400 ) {
-            $msg = $data['error']['message'] ?? $body;
+            $msg     = $data['error']['message'] ?? $body;
+            $fb_code = (int) ( $data['error']['code'] ?? 0 );
+
+            // Codes 190 (token invalide/expiré) et 102 (session expirée).
+            if ( in_array( $fb_code, [ 190, 102 ], true ) ) {
+                update_option( 'fibb_comm_meta_token_expired', true );
+            }
+
             return [ 'success' => false, 'error' => "HTTP {$code} : {$msg}" ];
         }
 
         return [ 'success' => true, 'data' => $data ];
+    }
+
+    /**
+     * Échange un User Access Token contre un Page Access Token permanent.
+     *
+     * Étape 1 : échange en long-lived user token (60 jours).
+     * Étape 2 : récupère le Page Access Token via /me/accounts (non-expirant).
+     *
+     * @param string $user_token  Token utilisateur (court ou long).
+     * @param string $app_id      App ID Facebook.
+     * @param string $app_secret  App Secret Facebook.
+     * @return array{success:bool, token?:string, type?:string, expiry_ts?:int, error?:string}
+     */
+    public function extend_token( string $user_token, string $app_id, string $app_secret ): array {
+        // Étape 1 : long-lived user token.
+        $ll_url = 'https://graph.facebook.com/oauth/access_token'
+            . '?grant_type=fb_exchange_token'
+            . '&client_id=' . rawurlencode( $app_id )
+            . '&client_secret=' . rawurlencode( $app_secret )
+            . '&fb_exchange_token=' . rawurlencode( $user_token );
+
+        $ll = $this->request( 'GET', $ll_url );
+        if ( ! $ll['success'] ) {
+            return [ 'success' => false, 'error' => 'Échange token échoué : ' . $ll['error'] ];
+        }
+
+        $ll_token  = $ll['data']['access_token'] ?? '';
+        $ll_expiry = isset( $ll['data']['expires_in'] ) ? time() + (int) $ll['data']['expires_in'] : 0;
+
+        if ( ! $ll_token ) {
+            return [ 'success' => false, 'error' => 'Token vide dans la réponse de Facebook.' ];
+        }
+
+        // Étape 2 : Page Access Token permanent via /me/accounts.
+        $page_id  = $this->page_id();
+        $acct_url = "{$this->graph_url}/me/accounts?access_token=" . rawurlencode( $ll_token );
+        $accounts = $this->request( 'GET', $acct_url );
+
+        if ( $accounts['success'] && $page_id ) {
+            foreach ( $accounts['data']['data'] ?? [] as $account ) {
+                if ( (string) ( $account['id'] ?? '' ) === $page_id && ! empty( $account['access_token'] ) ) {
+                    return [
+                        'success'   => true,
+                        'token'     => $account['access_token'],
+                        'type'      => 'page',
+                        'expiry_ts' => 0,
+                    ];
+                }
+            }
+        }
+
+        // Fallback : long-lived user token (~60 jours).
+        return [
+            'success'   => true,
+            'token'     => $ll_token,
+            'type'      => 'long_lived',
+            'expiry_ts' => $ll_expiry,
+        ];
     }
 
     /* ── Facebook ──────────────────────────────────────────────── */

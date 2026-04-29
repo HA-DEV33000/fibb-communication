@@ -408,4 +408,97 @@
         if (e.key === 'Escape') window.fibbClosePopup();
     });
 
+    // ── Republier tous les posts échoués ───────────────────────
+    var retryAllBtn = document.getElementById('fibb-retry-all-btn');
+    if (retryAllBtn) {
+        retryAllBtn.addEventListener('click', function () {
+            if (!confirm('Republier tous les posts échoués maintenant ?')) return;
+
+            retryAllBtn.disabled    = true;
+            retryAllBtn.textContent = '⏳ Republication en cours…';
+
+            var resultDiv = document.getElementById('fibb-retry-all-result');
+
+            var data = new FormData();
+            data.append('action', 'fibb_comm_retry_all_failed');
+            data.append('_ajax_nonce', fibbCommAjax.nonce);
+
+            fetch(fibbCommAjax.ajaxurl, { method: 'POST', body: data })
+                .then(function (r) { return r.json(); })
+                .then(function (resp) {
+                    retryAllBtn.disabled    = false;
+                    retryAllBtn.textContent = '🔄 Republier tous les échecs';
+                    if (resp.success) {
+                        resultDiv.style.display    = 'block';
+                        resultDiv.style.background = resp.data.errors === 0 ? '#d4edda' : '#fff3cd';
+                        resultDiv.style.color      = resp.data.errors === 0 ? '#155724' : '#856404';
+                        resultDiv.textContent       = '✓ ' + resp.data.message + ' Rechargez la page pour voir le résultat.';
+                        if (resp.data.ok > 0) {
+                            retryAllBtn.closest('.notice').style.display = 'none';
+                        }
+                    } else {
+                        resultDiv.style.display    = 'block';
+                        resultDiv.style.background = '#f8d7da';
+                        resultDiv.style.color      = '#721c24';
+                        resultDiv.textContent       = '✗ ' + (resp.data && resp.data.error ? resp.data.error : 'Erreur inconnue');
+                    }
+                })
+                .catch(function () {
+                    retryAllBtn.disabled    = false;
+                    retryAllBtn.textContent = '🔄 Republier tous les échecs';
+                    resultDiv.style.display    = 'block';
+                    resultDiv.style.background = '#f8d7da';
+                    resultDiv.style.color      = '#721c24';
+                    resultDiv.textContent       = '✗ Erreur réseau.';
+                });
+        });
+    }
+
+    // ── Génération token Meta permanent ────────────────────────
+    var refreshBtn = document.getElementById('fibb-refresh-meta-token-btn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function () {
+            var input  = document.getElementById('fibb-user-token-input');
+            var result = document.getElementById('fibb-refresh-meta-result');
+            var token  = input ? input.value.trim() : '';
+
+            if (!token) {
+                result.textContent = '⚠ Collez votre User Access Token dans le champ ci-dessus.';
+                result.style.color = '#e65800';
+                return;
+            }
+
+            refreshBtn.disabled    = true;
+            refreshBtn.textContent = 'Traitement…';
+            result.textContent     = 'Échange du token en cours avec Facebook…';
+            result.style.color     = '#444';
+
+            var data = new FormData();
+            data.append('action', 'fibb_comm_refresh_meta_token');
+            data.append('user_token', token);
+            data.append('_ajax_nonce', fibbCommAjax.nonce);
+
+            fetch(fibbCommAjax.ajaxurl, { method: 'POST', body: data })
+                .then(function (r) { return r.json(); })
+                .then(function (resp) {
+                    refreshBtn.disabled    = false;
+                    refreshBtn.textContent = 'Générer token permanent';
+                    if (resp.success) {
+                        result.style.color = '#0a7227';
+                        result.textContent = '✓ ' + resp.data.message + ' Rechargez la page pour voir le statut mis à jour.';
+                        if (input) input.value = '';
+                    } else {
+                        result.style.color = '#b32d2e';
+                        result.textContent = '✗ ' + (resp.data && resp.data.error ? resp.data.error : 'Erreur inconnue');
+                    }
+                })
+                .catch(function () {
+                    refreshBtn.disabled    = false;
+                    refreshBtn.textContent = 'Générer token permanent';
+                    result.style.color     = '#b32d2e';
+                    result.textContent     = '✗ Erreur réseau. Vérifiez votre connexion.';
+                });
+        });
+    }
+
 })();

@@ -3,6 +3,10 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 $settings = get_option( FIBB_COMM_OPTION, [] );
 $saved    = isset( $_GET['platforms-saved'] );
+
+$meta_expiry     = (int) ( $settings['meta_token_expiry'] ?? 0 );
+$meta_token_type = $settings['meta_token_type'] ?? '';
+$meta_days_left  = $meta_expiry ? (int) round( ( $meta_expiry - time() ) / DAY_IN_SECONDS ) : null;
 ?>
 <?php if ( $saved ) : ?>
     <div class="notice notice-success is-dismissible"><p>Paramètres des plateformes enregistrés.</p></div>
@@ -15,7 +19,17 @@ $saved    = isset( $_GET['platforms-saved'] );
     <!-- META (Facebook + Instagram) -->
     <div class="fibb-settings-section">
         <h3>🔵 Meta — Facebook &amp; Instagram</h3>
-        <p style="color:#666;font-size:13px;">Utilisez un <strong>Page Access Token long-lived</strong> généré via le Meta Graph API Explorer. Ce token ne expire pas sauf révocation. La page Instagram Business doit être liée à votre page Facebook dans Meta Business Suite.</p>
+        <p style="color:#666;font-size:13px;">Utilisez un <strong>Page Access Token permanent</strong> généré via le bouton ci-dessous. Ce token ne expire pas sauf révocation. La page Instagram Business doit être liée à votre page Facebook dans Meta Business Suite.</p>
+
+        <?php if ( null !== $meta_days_left && $meta_days_left <= 0 ) : ?>
+            <div class="notice notice-error inline" style="margin:0 0 12px;">
+                <p>🔴 Votre token Meta a <strong>expiré</strong>. Utilisez le bouton <em>Obtenir un token permanent</em> ci-dessous.</p>
+            </div>
+        <?php elseif ( null !== $meta_days_left && $meta_days_left <= 7 ) : ?>
+            <div class="notice notice-warning inline" style="margin:0 0 12px;">
+                <p>⚠️ Votre token Meta expire dans <strong><?php echo esc_html( $meta_days_left ); ?> jour(s)</strong>. Renouvelez-le dès que possible.</p>
+            </div>
+        <?php endif; ?>
 
         <table class="form-table">
             <tr>
@@ -42,7 +56,35 @@ $saved    = isset( $_GET['platforms-saved'] );
                     <input type="password" id="meta_page_token" name="meta_page_token"
                            value="<?php echo esc_attr( $settings['meta_page_token'] ?? '' ); ?>"
                            class="large-text" autocomplete="off">
-                    <p class="description">Token long-lived. Laissez vide pour conserver le token existant si vous ne souhaitez pas le modifier.</p>
+                    <p class="description">
+                        Token permanent. Laissez vide pour conserver le token existant.
+                        <?php if ( $meta_token_type ) : ?>
+                            <br>Type actuel : <strong><?php echo esc_html( $meta_token_type === 'page' ? 'Page Access Token (permanent ✓)' : ( $meta_token_type === 'long_lived' ? 'Long-lived User Token (~60 jours)' : 'Manuel' ) ); ?></strong>
+                            <?php if ( $meta_expiry && $meta_days_left > 0 ) : ?>
+                                — expire le <strong><?php echo esc_html( gmdate( 'd/m/Y', $meta_expiry ) ); ?></strong>
+                            <?php elseif ( $meta_token_type === 'page' ) : ?>
+                                — <strong>ne expire pas</strong>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <th><label for="meta_app_id">App ID Facebook</label></th>
+                <td>
+                    <input type="text" id="meta_app_id" name="meta_app_id"
+                           value="<?php echo esc_attr( $settings['meta_app_id'] ?? '' ); ?>"
+                           class="regular-text" placeholder="Ex : 123456789012">
+                    <p class="description">ID de votre application Facebook (<a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">Meta for Developers</a>). Requis pour générer un token permanent.</p>
+                </td>
+            </tr>
+            <tr>
+                <th><label for="meta_app_secret">App Secret</label></th>
+                <td>
+                    <input type="password" id="meta_app_secret" name="meta_app_secret"
+                           value="<?php echo esc_attr( $settings['meta_app_secret'] ?? '' ); ?>"
+                           class="regular-text" autocomplete="off">
+                    <p class="description">Secret de l'application. Laissez vide pour conserver le secret existant.</p>
                 </td>
             </tr>
         </table>
@@ -51,6 +93,28 @@ $saved    = isset( $_GET['platforms-saved'] );
             Tester la connexion Facebook/Instagram
         </button>
         <span id="fibb-test-result-facebook" class="fibb-test-result"></span>
+
+        <!-- Génération token permanent -->
+        <div style="margin-top:16px;padding:16px;background:#f0f6fc;border:1px solid #c5d8f0;border-radius:4px;">
+            <h4 style="margin:0 0 8px;">🔄 Obtenir un token permanent (Page Access Token)</h4>
+            <p style="color:#444;font-size:13px;margin:0 0 12px;">
+                Si votre token expire régulièrement, suivez ces étapes pour obtenir un token permanent :<br>
+                1. Allez dans <a href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Graph API Explorer</a><br>
+                2. Sélectionnez votre App, cochez les permissions <code>pages_manage_posts</code> et <code>instagram_basic</code><br>
+                3. Générez un <strong>User Access Token</strong> (pas un Page Token)<br>
+                4. Collez-le ci-dessous et cliquez <em>Générer token permanent</em> — le Page Token non-expirant sera sauvegardé automatiquement
+            </p>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <input type="text" id="fibb-user-token-input"
+                       placeholder="Coller le User Access Token ici…"
+                       style="flex:1;min-width:280px;font-family:monospace;font-size:12px;"
+                       autocomplete="off">
+                <button type="button" id="fibb-refresh-meta-token-btn" class="button button-primary">
+                    Générer token permanent
+                </button>
+            </div>
+            <div id="fibb-refresh-meta-result" style="margin-top:8px;font-size:13px;min-height:20px;"></div>
+        </div>
     </div>
 
     <!-- LINKEDIN -->
