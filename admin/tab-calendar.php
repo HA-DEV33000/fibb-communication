@@ -434,6 +434,19 @@ else :
                     $time  = substr( $p['scheduled_at'], 11, 5 );
                     $can_delete = in_array( $p['status'], [ 'scheduled', 'draft', 'failed' ], true );
                 ?>
+                <?php if ( 'instagram' === $plat && ! empty( $p['image_url'] ) ) : ?>
+                <a href="#" class="fibb-event fibb-week-event fibb-cal-ig-thumb <?php echo esc_attr( $cls ); ?> fibb-filterable"
+                   data-platform="instagram"
+                   data-id="<?php echo (int) $p['id']; ?>"
+                   data-content="<?php echo esc_attr( $p['content'] ); ?>"
+                   data-status="<?php echo esc_attr( $p['status'] ); ?>"
+                   data-image="<?php echo esc_attr( $p['image_url'] ); ?>"
+                   onclick="fibbIgOpenPanel(this);return false;">
+                    <img src="<?php echo esc_url( $p['image_url'] ); ?>" class="fibb-cal-thumb-img" alt="">
+                    <span class="fibb-platform-badge fibb-badge-instagram" style="position:absolute;top:4px;left:4px;font-size:9px;padding:1px 5px;">IG</span>
+                    <span class="fibb-cal-time"><?php echo esc_html( $time ); ?></span>
+                </a>
+                <?php else : ?>
                 <a href="#" class="fibb-event fibb-week-event <?php echo esc_attr( $cls ); ?> fibb-filterable"
                    data-platform="<?php echo esc_attr( $plat ); ?>"
                    data-id="<?php echo (int) $p['id']; ?>"
@@ -450,6 +463,7 @@ else :
                     <span class="fibb-week-event-time"><?php echo esc_html( $time ); ?></span>
                     <?php echo esc_html( $label ); ?>
                 </a>
+                <?php endif; ?>
                 <?php endif; ?>
             <?php endforeach; ?>
         </div>

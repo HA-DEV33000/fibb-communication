@@ -49,6 +49,18 @@ class FIBB_Comm_Admin {
                 true
             );
         }
+
+        // JS Instagram Auto + Calendrier (panneau latéral partagé)
+        $current_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'calendar';
+        if ( in_array( $current_tab, [ 'instagram-auto', 'calendar' ], true ) ) {
+            wp_enqueue_script(
+                'fibb-comm-instagram',
+                FIBB_COMM_PLUGIN_URL . 'assets/fibb-comm-instagram.js',
+                [ 'jquery' ],
+                FIBB_COMM_VERSION,
+                true
+            );
+        }
     }
 
     public function handle_actions(): void {
@@ -283,6 +295,7 @@ class FIBB_Comm_Admin {
         $settings['auto_ig_min_width']  = absint( $_POST['auto_ig_min_width'] ?? 1080 );
         $settings['auto_ig_caption']    = sanitize_text_field( wp_unslash( $_POST['auto_ig_caption'] ?? '' ) );
         $settings['auto_ig_categories'] = sanitize_text_field( wp_unslash( $_POST['auto_ig_categories'] ?? '' ) );
+        $settings['auto_ig_interval']   = max( 1, absint( $_POST['auto_ig_interval'] ?? 60 ) );
         $settings['log_retention']      = absint( $_POST['log_retention'] ?? 90 );
 
         update_option( FIBB_COMM_OPTION, $settings );
@@ -621,6 +634,223 @@ class FIBB_Comm_Admin {
         wp_send_json_success( $result );
     }
 
+    /* ── INSTAGRAM QUEUE AJAX ─────────────────────────────────── */
+
+    public function ajax_ig_queue_add(): void {
+        check_ajax_referer( 'fibb_comm_ajax', '_ajax_nonce' );
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'error' => 'Permission refusée.' ] );
+        }
+
+        $image_url = esc_url_raw( wp_unslash( $_POST['image_url'] ?? '' ) );
+        if ( ! $image_url ) {
+            wp_send_json_error( [ 'error' => 'URL image manquante.' ] );
+            return;
+        }
+
+        $caption    = sanitize_textarea_field( wp_unslash( $_POST['caption'] ?? '' ) );
+        $auto_ig    = new FIBB_Comm_Auto_Instagram();
+        $resolved   = $auto_ig->build_caption(
+            sanitize_text_field( wp_unslash( $_POST['title'] ?? '' ) ),
+            esc_url_raw( wp_unslash( $_POST['url'] ?? '' ) ),
+            sanitize_text_field( wp_unslash( $_POST['category'] ?? '' ) )
+        );
+        $final_caption = $caption ?: $resolved;
+
+        $id = $auto_ig->add_to_queue( $image_url, $final_caption );
+        if ( ! $id ) {
+            wp_send_json_error( [ 'error' => 'Impossible d\'ajouter à la file.' ] );
+            return;
+        }
+
+        wp_send_json_success( [ 'id' => $id, 'message' => 'Photo ajoutée à la file Instagram.' ] );
+    }
+
+    public function ajax_ig_queue_remove(): void {
+        check_ajax_referer( 'fibb_comm_ajax', '_ajax_nonce' );
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'error' => 'Permission refusée.' ] );
+        }
+
+        $id = absint( $_POST['id'] ?? 0 );
+        if ( ! $id ) {
+            wp_send_json_error( [ 'error' => 'ID invalide.' ] );
+            return;
+        }
+
+        $post = FIBB_Comm_DB::get_post( $id );
+        if ( ! $post || $post['status'] !== 'ig_queued' ) {
+            wp_send_json_error( [ 'error' => 'Post introuvable ou déjà traité.' ] );
+            return;
+        }
+
+        FIBB_Comm_DB::delete_post( $id );
+        wp_send_json_success( [ 'id' => $id ] );
+    }
+
+    public function ajax_ig_preview_caption(): void {
+        check_ajax_referer( 'fibb_comm_ajax', '_ajax_nonce' );
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'error' => 'Permission refusée.' ] );
+        }
+
+        $auto_ig = new FIBB_Comm_Auto_Instagram();
+        $caption = $auto_ig->build_caption(
+            sanitize_text_field( wp_unslash( $_POST['title'] ?? '' ) ),
+            esc_url_raw( wp_unslash( $_POST['url'] ?? '' ) ),
+            sanitize_text_field( wp_unslash( $_POST['category'] ?? '' ) )
+        );
+
+        $template = sanitize_textarea_field( wp_unslash( $_POST['caption'] ?? '' ) );
+        if ( $template ) {
+            $settings   = get_option( FIBB_COMM_OPTION, [] );
+            $edition    = $settings['festival_edition'] ?? '';
+            $hashtags   = $settings['hashtags_instagram'] ?? '#bridge #bordeaux';
+            $fest_date  = isset( $settings['festival_date'] ) ? gmdate( 'd/m/Y', strtotime( $settings['festival_date'] ) ) : '';
+            $caption = str_replace(
+                [ '{{title}}', '{{url}}', '{{category}}', '{{date}}', '{{edition}}', '{{hashtags}}', '{{festival_date}}' ],
+                [ sanitize_text_field( wp_unslash( $_POST['title'] ?? '' ) ), esc_url_raw( wp_unslash( $_POST['url'] ?? '' ) ), sanitize_text_field( wp_unslash( $_POST['category'] ?? '' ) ), gmdate( 'd/m/Y' ), $edition, $hashtags, $fest_date ],
+                $template
+            );
+        }
+
+        wp_send_json_success( [ 'caption' => $caption ] );
+    }
+
+    public function ajax_ig_bulk_schedule(): void {
+        check_ajax_referer( 'fibb_comm_ajax', '_ajax_nonce' );
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'error' => 'Permission refusée.' ] );
+        }
+
+        $images        = array_map( 'esc_url_raw', (array) ( $_POST['images'] ?? [] ) );
+        $caption       = sanitize_textarea_field( wp_unslash( $_POST['caption'] ?? '' ) );
+        $start_local   = sanitize_text_field( wp_unslash( $_POST['start_datetime'] ?? '' ) );
+        $interval_min  = max( 1, absint( $_POST['interval_minutes'] ?? 60 ) );
+
+        $images = array_filter( $images );
+        if ( empty( $images ) ) {
+            wp_send_json_error( [ 'error' => 'Aucune image sélectionnée.' ] );
+            return;
+        }
+        if ( ! $start_local ) {
+            wp_send_json_error( [ 'error' => 'Date de début manquante.' ] );
+            return;
+        }
+
+        $settings = get_option( FIBB_COMM_OPTION, [] );
+        $tz_str   = $settings['festival_timezone'] ?? 'Europe/Paris';
+        try {
+            $tz           = new DateTimeZone( $tz_str );
+            $dt           = new DateTime( $start_local, $tz );
+            $dt->setTimezone( new DateTimeZone( 'UTC' ) );
+            $start_utc_ts = $dt->getTimestamp();
+        } catch ( Exception $e ) {
+            $start_utc_ts = time();
+        }
+
+        $meta_api = new FIBB_Comm_Meta_API();
+        $created  = 0;
+        $errors   = [];
+
+        foreach ( array_values( $images ) as $i => $image_url ) {
+            $ratio_check = $meta_api->check_instagram_ratio( $image_url );
+            if ( ! $ratio_check['valid'] ) {
+                $errors[] = 'Image #' . ( $i + 1 ) . ' : ' . $ratio_check['error'];
+                continue;
+            }
+
+            $scheduled_utc = gmdate( 'Y-m-d H:i:s', $start_utc_ts + $i * $interval_min * 60 );
+            $id = FIBB_Comm_DB::insert_post( [
+                'platform'     => 'instagram',
+                'content'      => $caption,
+                'image_url'    => $image_url,
+                'phase'        => 'auto',
+                'scheduled_at' => $scheduled_utc,
+                'status'       => 'ig_queued',
+            ] );
+
+            if ( $id ) {
+                $created++;
+            } else {
+                $errors[] = 'Image #' . ( $i + 1 ) . ' : erreur d\'insertion en base.';
+            }
+        }
+
+        wp_send_json_success( [ 'created' => $created, 'errors' => $errors ] );
+    }
+
+    public function ajax_ig_publish_now(): void {
+        check_ajax_referer( 'fibb_comm_ajax', '_ajax_nonce' );
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'error' => 'Permission refusée.' ] );
+        }
+
+        $id = absint( $_POST['post_id'] ?? 0 );
+        if ( ! $id ) {
+            wp_send_json_error( [ 'error' => 'ID invalide.' ] );
+            return;
+        }
+
+        $post = FIBB_Comm_DB::get_post( $id );
+        if ( ! $post ) {
+            wp_send_json_error( [ 'error' => 'Post introuvable.' ] );
+            return;
+        }
+
+        $meta_api = new FIBB_Comm_Meta_API();
+        $result   = $meta_api->publish_instagram( $post );
+
+        if ( $result['success'] ) {
+            FIBB_Comm_DB::mark_published( $id, $result['post_id'] ?? '' );
+            wp_send_json_success( [ 'post_id' => $id ] );
+        } else {
+            FIBB_Comm_DB::mark_failed( $id, $result['error'] ?? 'Erreur inconnue' );
+            wp_send_json_error( [ 'error' => $result['error'] ?? 'Erreur inconnue' ] );
+        }
+    }
+
+    public function ajax_ig_get_post(): void {
+        check_ajax_referer( 'fibb_comm_ajax', '_ajax_nonce' );
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( [ 'error' => 'Permission refusée.' ] );
+        }
+
+        $id = absint( $_POST['post_id'] ?? 0 );
+        if ( ! $id ) {
+            wp_send_json_error( [ 'error' => 'ID invalide.' ] );
+            return;
+        }
+
+        $post = FIBB_Comm_DB::get_post( $id );
+        if ( ! $post ) {
+            wp_send_json_error( [ 'error' => 'Post introuvable.' ] );
+            return;
+        }
+
+        $settings = get_option( FIBB_COMM_OPTION, [] );
+        $tz_str   = $settings['festival_timezone'] ?? 'Europe/Paris';
+        try {
+            $tz = new DateTimeZone( $tz_str );
+            $dt = new DateTime( $post['scheduled_at'], new DateTimeZone( 'UTC' ) );
+            $dt->setTimezone( $tz );
+            $date_local = $dt->format( 'd/m/Y H:i' );
+        } catch ( Exception $e ) {
+            $date_local = substr( $post['scheduled_at'], 0, 16 );
+        }
+
+        wp_send_json_success( [
+            'id'           => $post['id'],
+            'image_url'    => $post['image_url'] ?? '',
+            'content'      => $post['content'],
+            'scheduled_at' => $date_local,
+            'status'       => $post['status'],
+            'edit_url'     => admin_url( 'admin.php?page=fibb-communication&tab=new-post&edit=' . $id ),
+            'can_delete'   => in_array( $post['status'], [ 'ig_queued', 'scheduled', 'draft', 'failed' ], true ),
+            'delete_nonce' => wp_create_nonce( 'fibb_comm_delete_' . $id ),
+        ] );
+    }
+
     /* ── RENDER ────────────────────────────────────────────────── */
 
     public function render_page(): void {
@@ -631,13 +861,14 @@ class FIBB_Comm_Admin {
         $imported = isset( $_GET['imported'] ) ? absint( $_GET['imported'] ) : 0;
 
         $tabs = [
-            'calendar'   => '📅 Calendrier',
-            'plan'       => '🗂 Plan',
-            'wizard'     => '🧙 Assistant Plan',
-            'new-post'   => '✏️ Nouveau Post',
-            'newsletter' => '📧 Newsletter',
-            'platforms'  => '⚙️ Plateformes',
-            'settings'   => '🛠 Paramètres',
+            'calendar'       => '📅 Calendrier',
+            'plan'           => '🗂 Plan',
+            'wizard'         => '🧙 Assistant Plan',
+            'instagram-auto' => '📸 Instagram Auto',
+            'new-post'       => '✏️ Nouveau Post',
+            'newsletter'     => '📧 Newsletter',
+            'platforms'      => '⚙️ Plateformes',
+            'settings'       => '🛠 Paramètres',
         ];
         ?>
         <div class="wrap">
@@ -662,10 +893,34 @@ class FIBB_Comm_Admin {
                 <?php endforeach; ?>
             </div>
 
+            <!-- Panneau latéral Instagram (partagé entre onglets) -->
+            <div id="fibb-ig-panel-overlay" class="fibb-side-panel-overlay"></div>
+            <div id="fibb-ig-panel" class="fibb-side-panel" role="dialog" aria-label="Détails du post Instagram">
+                <div class="fibb-side-panel-header">
+                    <span class="fibb-badge fibb-badge-instagram">Instagram</span>
+                    <button type="button" class="fibb-side-panel-close" id="fibb-ig-panel-close">✕</button>
+                </div>
+                <img id="fibb-panel-img" src="" alt="" class="fibb-side-panel-img">
+                <div class="fibb-side-panel-body">
+                    <p id="fibb-panel-caption" class="fibb-side-panel-caption"></p>
+                    <p id="fibb-panel-date" class="fibb-side-panel-date"></p>
+                    <span id="fibb-panel-status" class="fibb-side-panel-status"></span>
+                </div>
+                <div class="fibb-side-panel-actions">
+                    <a id="fibb-panel-edit-btn" href="#" class="button">✏️ Modifier</a>
+                    <button type="button" id="fibb-panel-delete-btn" class="button">🗑 Supprimer</button>
+                    <button type="button" id="fibb-panel-publish-btn" class="button button-primary">▶ Publier</button>
+                </div>
+                <div id="fibb-panel-msg" style="display:none;margin:0 16px 16px;padding:8px;font-size:13px;border-radius:4px;"></div>
+            </div>
+
             <?php
             switch ( $tab ) {
                 case 'wizard':
                     include FIBB_COMM_PLUGIN_DIR . 'admin/tab-wizard.php';
+                    break;
+                case 'instagram-auto':
+                    include FIBB_COMM_PLUGIN_DIR . 'admin/tab-instagram.php';
                     break;
                 case 'plan':
                     include FIBB_COMM_PLUGIN_DIR . 'admin/tab-plan.php';

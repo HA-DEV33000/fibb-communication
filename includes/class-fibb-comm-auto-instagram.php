@@ -20,12 +20,16 @@ class FIBB_Comm_Auto_Instagram {
     }
 
     private function default_caption(): string {
-        $edition  = $this->settings()['festival_edition'] ?? '';
-        $caption  = $this->settings()['auto_ig_caption'] ?? "📸 FIBB {{edition}} — #bridge #bordeaux #festival";
-        $hashtags = $this->settings()['ig_hashtags'] ?? '#bridge #bordeaux';
-        $caption  = str_replace( '{{edition}}', $edition, $caption );
-        $caption  = str_replace( '{{hashtags}}', $hashtags, $caption );
-        return $caption;
+        $s        = $this->settings();
+        $edition  = $s['festival_edition'] ?? '';
+        $caption  = $s['auto_ig_caption']  ?? "📸 FIBB {{edition}} — #bridge #bordeaux #festival";
+        $hashtags = $s['hashtags_instagram'] ?? '#bridge #bordeaux'; // fix: was ig_hashtags
+        $fest_date = isset( $s['festival_date'] ) ? gmdate( 'd/m/Y', strtotime( $s['festival_date'] ) ) : '';
+        return str_replace(
+            [ '{{edition}}', '{{hashtags}}', '{{festival_date}}', '{{title}}', '{{url}}', '{{category}}', '{{date}}' ],
+            [ $edition, $hashtags, $fest_date, '', '', '', gmdate( 'd/m/Y' ) ],
+            $caption
+        );
     }
 
     private function trigger_categories(): array {
@@ -89,11 +93,41 @@ class FIBB_Comm_Auto_Instagram {
         ] );
     }
 
-    public function build_caption( string $title = '' ): string {
-        $caption = $this->default_caption();
-        if ( $title ) {
-            $caption = $title . "\n\n" . $caption;
-        }
-        return $caption;
+    public function build_caption( string $title = '', string $url = '', string $category = '' ): string {
+        $s        = $this->settings();
+        $edition  = $s['festival_edition'] ?? '';
+        $hashtags = $s['hashtags_instagram'] ?? '#bridge #bordeaux';
+        $fest_date = isset( $s['festival_date'] ) ? gmdate( 'd/m/Y', strtotime( $s['festival_date'] ) ) : '';
+        $template = $s['auto_ig_caption'] ?? "📸 FIBB {{edition}} — {{hashtags}}";
+        return str_replace(
+            [ '{{title}}', '{{url}}', '{{category}}', '{{date}}', '{{edition}}', '{{hashtags}}', '{{festival_date}}' ],
+            [ $title, $url, $category, gmdate( 'd/m/Y' ), $edition, $hashtags, $fest_date ],
+            $template
+        );
+    }
+
+    /**
+     * Valide le ratio de l'image pour Instagram (0.8:1 à 1.91:1).
+     * Retourne un warning si hors tolérance, non bloquant.
+     */
+    public function passes_ratio_check( int $attachment_id ): bool {
+        $meta = wp_get_attachment_metadata( $attachment_id );
+        if ( ! isset( $meta['width'], $meta['height'] ) || $meta['width'] <= 0 ) return true;
+        $ratio = $meta['height'] / $meta['width'];
+        return $ratio >= 0.8 && $ratio <= 1.91;
+    }
+
+    /**
+     * Ajoute une photo directement à la file ig_queued.
+     */
+    public function add_to_queue( string $image_url, string $caption ): int {
+        return (int) FIBB_Comm_DB::insert_post( [
+            'platform'   => 'instagram',
+            'content'    => $caption,
+            'image_url'  => $image_url,
+            'phase'      => 'auto',
+            'status'     => 'ig_queued',
+            'created_by' => get_current_user_id(),
+        ] );
     }
 }

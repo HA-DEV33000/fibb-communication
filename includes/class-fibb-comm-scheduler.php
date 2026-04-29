@@ -3,18 +3,24 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 class FIBB_Comm_Scheduler {
 
-    const CRON_HOOK = 'fibb_comm_dispatch_scheduled';
+    const CRON_HOOK    = 'fibb_comm_dispatch_scheduled';
+    const IG_CRON_HOOK = 'fibb_ig_queue_dispatch';
 
     public static function register_cron(): void {
         if ( ! wp_next_scheduled( self::CRON_HOOK ) ) {
             wp_schedule_event( time(), 'every_15_minutes', self::CRON_HOOK );
         }
+        if ( ! wp_next_scheduled( self::IG_CRON_HOOK ) ) {
+            wp_schedule_event( time(), 'every_15_minutes', self::IG_CRON_HOOK );
+        }
     }
 
     public static function unregister_cron(): void {
-        $ts = wp_next_scheduled( self::CRON_HOOK );
-        if ( $ts ) {
-            wp_unschedule_event( $ts, self::CRON_HOOK );
+        foreach ( [ self::CRON_HOOK, self::IG_CRON_HOOK ] as $hook ) {
+            $ts = wp_next_scheduled( $hook );
+            if ( $ts ) {
+                wp_unschedule_event( $ts, $hook );
+            }
         }
     }
 
@@ -79,6 +85,30 @@ class FIBB_Comm_Scheduler {
         $retention = isset( $settings['log_retention'] ) ? (int) $settings['log_retention'] : 90;
         if ( $retention > 0 ) {
             FIBB_Comm_DB::purge_old_logs( $retention );
+        }
+    }
+
+    public static function dispatch_instagram_queue(): void {
+        $settings = get_option( FIBB_COMM_OPTION, [] );
+        $interval = max( 1, (int) ( $settings['auto_ig_interval'] ?? 60 ) );
+
+        $last = FIBB_Comm_DB::get_last_published_instagram_time();
+        if ( $last && ( time() - strtotime( $last ) ) < $interval * 60 ) {
+            return;
+        }
+
+        $next = FIBB_Comm_DB::get_next_ig_queued();
+        if ( ! $next ) {
+            return;
+        }
+
+        $meta_api = new FIBB_Comm_Meta_API();
+        $result   = $meta_api->publish_instagram( $next );
+
+        if ( $result['success'] ) {
+            FIBB_Comm_DB::mark_published( (int) $next['id'], $result['post_id'] ?? '' );
+        } else {
+            FIBB_Comm_DB::mark_failed( (int) $next['id'], $result['error'] ?? 'Erreur inconnue' );
         }
     }
 }

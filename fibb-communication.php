@@ -2,13 +2,13 @@
 /**
  * Plugin Name: FIBB Communication Suite
  * Description: Gestion des réseaux sociaux et planification des publications pour le Festival International de Bridge de Bordeaux. Facebook, Instagram, LinkedIn + calendrier + Assistant Plan (wizard SEO).
- * Version: 2.0
+ * Version: 2.1
  * Author: FIBB
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'FIBB_COMM_VERSION',    '2.0' );
+define( 'FIBB_COMM_VERSION',    '2.1' );
 define( 'FIBB_COMM_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'FIBB_COMM_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'FIBB_COMM_OPTION',     'fibb_comm_settings' );
@@ -53,7 +53,8 @@ add_filter( 'cron_schedules', function ( $schedules ) {
     return $schedules;
 } );
 
-add_action( FIBB_Comm_Scheduler::CRON_HOOK, [ 'FIBB_Comm_Scheduler', 'dispatch' ] );
+add_action( FIBB_Comm_Scheduler::CRON_HOOK,    [ 'FIBB_Comm_Scheduler', 'dispatch' ] );
+add_action( FIBB_Comm_Scheduler::IG_CRON_HOOK, [ 'FIBB_Comm_Scheduler', 'dispatch_instagram_queue' ] );
 
 /* ═══════════════════════════════════════
    AUTO INSTAGRAM
@@ -92,6 +93,13 @@ if ( is_admin() ) {
     add_action( 'wp_ajax_fibb_wizard_preview_template', [ $fibb_admin, 'ajax_wizard_preview_template' ] );
     add_action( 'wp_ajax_fibb_wizard_activate',         [ $fibb_admin, 'ajax_wizard_activate' ] );
     add_action( 'wp_ajax_fibb_wizard_seo_check',        [ $fibb_admin, 'ajax_wizard_seo_check' ] );
+
+    add_action( 'wp_ajax_fibb_ig_queue_add',            [ $fibb_admin, 'ajax_ig_queue_add' ] );
+    add_action( 'wp_ajax_fibb_ig_queue_remove',         [ $fibb_admin, 'ajax_ig_queue_remove' ] );
+    add_action( 'wp_ajax_fibb_ig_preview_caption',      [ $fibb_admin, 'ajax_ig_preview_caption' ] );
+    add_action( 'wp_ajax_fibb_ig_bulk_schedule',        [ $fibb_admin, 'ajax_ig_bulk_schedule' ] );
+    add_action( 'wp_ajax_fibb_ig_publish_now',          [ $fibb_admin, 'ajax_ig_publish_now' ] );
+    add_action( 'wp_ajax_fibb_ig_get_post',             [ $fibb_admin, 'ajax_ig_get_post' ] );
 
     add_action( 'admin_post_fibb_comm_newsletter_save', [ $fibb_admin, 'handle_newsletter_save' ] );
     add_action( 'admin_post_fibb_comm_newsletter_send', [ $fibb_admin, 'handle_newsletter_send' ] );

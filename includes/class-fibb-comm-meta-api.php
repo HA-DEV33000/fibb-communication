@@ -81,6 +81,29 @@ class FIBB_Comm_Meta_API {
 
     /* ── Instagram ─────────────────────────────────────────────── */
 
+    /**
+     * Instagram accepte les ratios entre 4:5 (0.8) et 1.91:1 (1.91).
+     * Toute image hors de cette plage déclenche HTTP 400 "aspect ratio not supported".
+     */
+    public function check_instagram_ratio( string $image_url ): array {
+        $size = @getimagesize( $image_url );
+        if ( ! $size || $size[1] === 0 ) {
+            return [ 'valid' => true ];
+        }
+
+        $ratio = $size[0] / $size[1];
+        if ( $ratio < 0.8 || $ratio > 1.91 ) {
+            $label = round( $ratio, 2 );
+            return [
+                'valid' => false,
+                'error' => "Format d'image non supporté par Instagram ({$size[0]}×{$size[1]}, ratio {$label}:1). "
+                         . "Recadrez l'image entre 4:5 (portrait) et 1.91:1 (paysage) avant de publier.",
+            ];
+        }
+
+        return [ 'valid' => true ];
+    }
+
     public function publish_instagram( array $post ): array {
         $token     = $this->page_token();
         $ig_user   = $this->ig_user_id();
@@ -91,6 +114,11 @@ class FIBB_Comm_Meta_API {
         }
         if ( ! $image_url ) {
             return [ 'success' => false, 'error' => "Instagram nécessite une image (image_url vide)." ];
+        }
+
+        $ratio_check = $this->check_instagram_ratio( $image_url );
+        if ( ! $ratio_check['valid'] ) {
+            return [ 'success' => false, 'error' => $ratio_check['error'] ];
         }
 
         // Étape 1 : créer le container média.

@@ -202,4 +202,78 @@ class FIBB_Comm_DB {
             )
         );
     }
+
+    /* ── INSTAGRAM QUEUE ──────────────────────────────────────── */
+
+    public static function get_next_ig_queued(): ?array {
+        global $wpdb;
+        $row = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT * FROM {$wpdb->prefix}fibb_comm_posts
+                 WHERE status = 'ig_queued' AND scheduled_at <= %s
+                 ORDER BY scheduled_at ASC
+                 LIMIT 1",
+                current_time( 'mysql', true )
+            ),
+            ARRAY_A
+        );
+        return $row ?: null;
+    }
+
+    public static function get_all_ig_queued(): array {
+        global $wpdb;
+        return $wpdb->get_results(
+            "SELECT * FROM {$wpdb->prefix}fibb_comm_posts
+             WHERE status = 'ig_queued'
+             ORDER BY created_at ASC",
+            ARRAY_A
+        ) ?: [];
+    }
+
+    public static function get_last_published_instagram_time(): ?string {
+        global $wpdb;
+        $val = $wpdb->get_var(
+            "SELECT MAX(published_at) FROM {$wpdb->prefix}fibb_comm_posts
+             WHERE platform = 'instagram' AND status = 'published'"
+        );
+        return $val ?: null;
+    }
+
+    public static function get_ig_published_today(): int {
+        global $wpdb;
+        $today = gmdate( 'Y-m-d' );
+        return (int) $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(*) FROM {$wpdb->prefix}fibb_comm_posts
+                 WHERE platform = 'instagram' AND status = 'published'
+                 AND DATE(published_at) = %s",
+                $today
+            )
+        );
+    }
+
+    public static function get_ig_failed(): array {
+        global $wpdb;
+        return $wpdb->get_results(
+            "SELECT * FROM {$wpdb->prefix}fibb_comm_posts
+             WHERE platform = 'instagram' AND status = 'failed'
+             ORDER BY updated_at DESC
+             LIMIT 50",
+            ARRAY_A
+        ) ?: [];
+    }
+
+    public static function get_ig_published( int $limit = 50 ): array {
+        global $wpdb;
+        return $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT * FROM {$wpdb->prefix}fibb_comm_posts
+                 WHERE platform = 'instagram' AND status = 'published'
+                 ORDER BY published_at DESC
+                 LIMIT %d",
+                $limit
+            ),
+            ARRAY_A
+        ) ?: [];
+    }
 }

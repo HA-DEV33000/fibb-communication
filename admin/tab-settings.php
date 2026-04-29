@@ -139,6 +139,16 @@ $saved    = isset( $_GET['settings-saved'] );
                     <p class="description">Séparées par des virgules. Laisser vide = déclencher sur tous les articles avec image à la une.</p>
                 </td>
             </tr>
+            <tr>
+                <th><label for="auto_ig_interval">Intervalle de publication (file)</label></th>
+                <td>
+                    1 post toutes les
+                    <input type="number" id="auto_ig_interval" name="auto_ig_interval" min="1" max="10080"
+                           value="<?php echo esc_attr( $settings['auto_ig_interval'] ?? '60' ); ?>"
+                           class="small-text"> minutes
+                    <p class="description">Intervalle entre deux publications depuis la file <strong>Instagram Auto</strong>. Ex : 60 = 1 post/heure, 1440 = 1 post/jour. Minimum recommandé : 30 min (limites Meta).</p>
+                </td>
+            </tr>
         </table>
     </div>
 
