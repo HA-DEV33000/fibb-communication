@@ -444,14 +444,20 @@ class FIBB_Comm_Admin {
         $meta_api     = new FIBB_Comm_Meta_API();
         $linkedin_api = new FIBB_Comm_LinkedIn_API();
 
+        $edition      = (string) ( $settings['festival_edition'] ?? '6' );
+        $festival_date = $settings['festival_date'] ?? '';
+
         foreach ( $platforms as $platform ) {
             if ( 'instagram' === $platform && ! $image_url ) {
                 continue; // Instagram sans image : ignoré silencieusement.
             }
 
+            // Résoudre {{hashtags}}, {{edition}}, {{festival_date}} par plateforme.
+            $resolved = FIBB_Comm_Wizard::resolve_tokens( $content, $edition, $festival_date, $platform, $settings );
+
             $row = [
                 'platform'     => $platform,
-                'content'      => $content,
+                'content'      => $resolved,
                 'image_url'    => $image_url ?: null,
                 'link_url'     => $link_url ?: null,
                 'phase'        => $phase ?: null,
@@ -538,8 +544,15 @@ class FIBB_Comm_Admin {
             $scheduled_utc = current_time( 'mysql', true );
         }
 
+        // Résoudre les tokens en fonction de la plateforme du post existant.
+        $existing      = FIBB_Comm_DB::get_post( $id );
+        $platform      = $existing['platform'] ?? '';
+        $edition       = (string) ( $settings['festival_edition'] ?? '6' );
+        $festival_date = $settings['festival_date'] ?? '';
+        $resolved      = FIBB_Comm_Wizard::resolve_tokens( $content, $edition, $festival_date, $platform, $settings );
+
         FIBB_Comm_DB::update_post( $id, [
-            'content'       => $content,
+            'content'       => $resolved,
             'image_url'     => $image_url ?: null,
             'link_url'      => $link_url ?: null,
             'phase'         => $phase ?: null,
